@@ -70,7 +70,7 @@ class StockRepositoryImpl @Inject constructor(
             *  First we clear local DB from previous data and insert new one.
             *  After we emit that data grabbed from DB for our UI to take it.
             *  If made that way, we will have Single source of truth (our DB) instead of thinking if that data came from API or DB*/
-            remoteListing?.let {listings ->
+            remoteListing?.let { listings ->
                 dao.clearCompanyListings()
                 dao.insertCompanyListings(
                     listings.map { it.toCompanyListingEntity() }

@@ -1,8 +1,11 @@
 package dev.pan.stockmarket.data.repository
 
 import coil.network.HttpException
+import dev.pan.stockmarket.data.csv.CSVParser
+import dev.pan.stockmarket.data.csv.CompanyListingsParser
 import dev.pan.stockmarket.data.local.StockDatabase
 import dev.pan.stockmarket.data.mapper.toCompanyListing
+import dev.pan.stockmarket.data.mapper.toCompanyListingEntity
 import dev.pan.stockmarket.data.remote.StockAPI
 import dev.pan.stockmarket.domain.model.CompanyListing
 import dev.pan.stockmarket.domain.repository.StockRepository
@@ -17,7 +20,8 @@ import javax.inject.Singleton
 @Singleton
 class StockRepositoryImpl @Inject constructor(
     val api: StockAPI,
-    val db: StockDatabase
+    val db: StockDatabase,
+    val companyListingsParser: CSVParser<CompanyListing>
 ) : StockRepository {
 
     private val dao = db.dao
@@ -52,12 +56,32 @@ class StockRepositoryImpl @Inject constructor(
             // fetch from remote
             val remoteListing = try {
                 val response = api.getListings()
+                companyListingsParser.parse(response.byteStream()) // parse fetched data from API into domain layer model
             } catch (e: IOException) {
                 e.printStackTrace()
                 emit(Resource.Error("Couldn't load data"))
+                null
             } catch (e: HttpException) {
                 emit(Resource.Error("Couldn't load data"))
+                null
             }
+
+            /* Now, after we parsed our data into this value, we can make it a source for our UI to get that data.
+            *  First we clear local DB from previous data and insert new one.
+            *  After we emit that data grabbed from DB for our UI to take it.
+            *  If made that way, we will have Single source of truth (our DB) instead of thinking if that data came from API or DB*/
+            remoteListing?.let {listings ->
+                dao.clearCompanyListings()
+                dao.insertCompanyListings(
+                    listings.map { it.toCompanyListingEntity() }
+                )
+                emit(Resource.Success(
+                    data = dao
+                        .searchCompanyListing("")
+                        .map { it.toCompanyListing() }))
+                emit(Resource.Loading(false))
+            }
+
         }
     }
 }

@@ -89,7 +89,17 @@ dependencies {
     // Coil
     implementation ("io.coil-kt:coil-compose:2.2.2")
 
-
+    // Dagger
+    implementation(libs.dagger.hilt.lifecycle.viewmodel)
+    implementation(libs.dagger)
+    implementation(libs.dagger.compiler)
+    implementation(libs.dagger.hilt.android)
+    implementation(libs.dagger.hilt.android.compiler)
+    implementation(libs.dagger.hilt.android.gradlePlugin)
+    implementation(libs.dagger.hilt.navigation.compose)
+    implementation(libs.dagger.hilt.android.testing)
+    implementation(libs.dagger.hilt.compiler)
+    
     // Retrofit
     implementation ("com.squareup.retrofit2:retrofit:2.9.0")
     implementation ("com.squareup.retrofit2:converter-moshi:2.9.0")
